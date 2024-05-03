@@ -1,3 +1,5 @@
+//Rory Hackney
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -55,13 +57,13 @@ public class Lexer {
         } else {
             System.out.println(msg);
         }
-        System.exit(1);
+//        System.exit(1);
     }
 
     Lexer(String source) {
         this.line = 1;
-        this.pos = 0;
-        this.position = 0;
+        this.pos = -1;
+        this.position = -1;
         this.s = source;
         this.chr = this.s.charAt(0);
         this.keywords.put("if", TokenType.Keyword_if);
@@ -81,29 +83,110 @@ public class Lexer {
         }
         return new Token(ifno, "", line, pos);
     }
+
+    //So the idea is, you process the char and return its int representation
+    //Maybe the Parser is what identifies it as a char, not the Lexer?
+    //Because we're just supposed to return the int ...
+    //I don't know.
+    //TODO: remove letter from value return and tidy up comments
     Token char_lit(int line, int pos) { // handle character literals
-        char c = getNextChar(); // skip opening quote
-        int n = (int)c;
-        // code here
-        return new Token(TokenType.Integer, "" + n, line, pos);
+        char c = getNextChar(); // skip opening quote - this is the char
+        if(c == '\'') {
+            error(line, pos, "Empty char literal");
+        }
+        // a char_lit should be either '?' or '\n' or '\\'
+        char d = getNextChar();
+        Token ret = null;
+        //if d = ', then c
+        if (d == '\'') {
+            ret = new Token(TokenType.Integer, "" + (int)c, line, pos);
+        }
+        //else if c = \
+        else if (c == '\\') {
+            //if d = n, \n
+            if (d == 'n') ret = new Token(TokenType.Integer, "" + (int)'\n' + " '\\n'", line, pos);
+            //if d = \, \\
+            else if (d == '\\') ret = new Token(TokenType.Integer, "" + (int)('\\') + " '\\\\'", line, pos);
+            else error(line, pos, "invalid escape character");
+            //skip past closing quote
+            //if it wasn't a quote, invalid char literal, error()
+            if (getNextChar() != '\'') error(line, pos, "invalid char literal - no closing quote");
+        }
+        //if neither in form '?' or '\n' or '\\', invalid char lit
+        else error(line, pos, "invalid char literal");
+        System.out.println('\n');
+        return ret;
+
+//        return new Token(TokenType.Integer, "" + n, line, pos);
     }
     Token string_lit(char start, int line, int pos) { // handle string literals
         String result = "";
         // code here
+        start = getNextChar();
+        while (start != '"') {
+            if (start == '\u0000') {
+                error(this.line, this.pos, "Reached end of file without closing String");
+                return new Token(TokenType.End_of_input, result, line, pos);
+            }
+            result += start;
+            start = getNextChar();
+        }
         return new Token(TokenType.String, result, line, pos);
     }
     Token div_or_comment(int line, int pos) { // handle division or comments
         // code here
-        return getToken();
+        // / is division, // or /* */ is comments
+        //if / by itself aka the next symbol is not * or /, DIVISION OPERATOR
+        //if // aka the next symbol is also /, COMMENT - skip to the next line
+        char nextSymbol = getNextChar();
+        if (nextSymbol == '/') {
+            nextSymbol = getNextChar();
+            while (this.line == line) {
+                if (getNextChar() == '\u0000') return new Token(TokenType.End_of_input, "", this.line, this.pos);
+            }
+            //AND the next char is not end of file
+            return getToken();
+            //if /* aka the next symbol is *, while the next symbol is not *, go to the next character. If the next char is not /, go past and keep going
+        } else if (nextSymbol == '*') {
+            boolean done = false;
+            while (! done) {
+                nextSymbol = getNextChar();
+                if (nextSymbol == '*' && getNextChar() == '/') {
+                    return getToken();
+                };
+            }
+//
+//            pos++;
+//            //find the next */
+//            while (! done) {
+//                nextSymbol = this.s.charAt(pos + 1);
+//                char followingSymbol = this.s.charAt(pos + 2);
+//                pos += 2;
+//                if (nextSymbol == '*' && followingSymbol == '/') {
+//                    this.pos = pos;
+//                    this.position = pos;
+//                    return getToken();
+//                }
+//            }
+        }
+        return new Token(TokenType.Op_divide, null, line, pos);
+
+
+//        return getToken();
     }
     Token identifier_or_integer(int line, int pos) { // handle identifiers and integers
         boolean is_number = true;
-        String text = "";
+        StringBuilder text = new StringBuilder(this.s.charAt(pos));
         // code here
-        return new Token(TokenType.Identifier, text, line, pos);
+        while (Character.isLetterOrDigit(this.s.charAt(pos + 1))) {
+            text.append(getNextChar());
+            pos++;
+        }
+        return new Token(TokenType.Identifier, text.toString(), line, pos);
     }
     Token getToken() {
         int line, pos;
+        getNextChar();
         while (Character.isWhitespace(this.chr)) {
             getNextChar();
         }
@@ -114,6 +197,9 @@ public class Lexer {
 
         switch (this.chr) {
             case '\u0000': return new Token(TokenType.End_of_input, "", this.line, this.pos);
+            case '\'': return char_lit(line, pos);
+            case '"': return string_lit('"', this.line, this.pos);
+            case '/': return div_or_comment(line, pos);
             // remaining case statements
 
             default: return identifier_or_integer(line, pos);
@@ -163,7 +249,7 @@ public class Lexer {
         if (1==1) {
             try {
 
-                File f = new File("src/main/resources/count.c");
+                File f = new File("src/main/resources/testing1.c");
                 Scanner s = new Scanner(f);
                 String source = " ";
                 String result = " ";
@@ -176,7 +262,7 @@ public class Lexer {
                 outputToFile(result);
 
             } catch(FileNotFoundException e) {
-                error(-1, -1, "Exception: " + e.getMessage());
+                 error(-1, -1, "Exception: " + e.getMessage());
             }
         } else {
             error(-1, -1, "No args");
