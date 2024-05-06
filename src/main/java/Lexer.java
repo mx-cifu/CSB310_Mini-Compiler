@@ -280,9 +280,17 @@ public class Lexer {
         return sb.toString();
     }
 
-    static void outputToFile(String result) {
+    static void outputToFile(String result, String filename) {
         try {
-            FileWriter myWriter = new FileWriter("src/main/resources/hello.lex");
+            //remove old extension and replace with .lex
+            int trimHere = filename.indexOf('.');
+            if (trimHere != -1) {
+                filename = filename.substring(0, trimHere);
+            }
+            filename = filename + ".lex";
+
+            //write to file
+            FileWriter myWriter = new FileWriter("src/main/resources/" + filename);
             myWriter.write(result);
             myWriter.close();
             System.out.println("Successfully wrote to the file.");
@@ -293,20 +301,25 @@ public class Lexer {
 
     public static void main(String[] args) {
         if (1==1) {
+            File[] files = new File[args.length];
+            Scanner s;
+            StringBuilder source;
+            Lexer l;
+            String result;
             try {
-                //checked: count, fizzbuzz, hello, loop, prime
-                //to check: 99bottles (need minus), 2 test files one with char
-                File f = new File("src/main/resources/testing2.c");
-                Scanner s = new Scanner(f);
-                StringBuilder source = new StringBuilder();
-                while (s.hasNext()) {
-                    source.append(s.nextLine()).append("\n");
+                for (int fileNum = 0; fileNum < args.length; fileNum++) {
+                    files[fileNum] = new File("src/main/resources/" + args[fileNum]);
+                    s = new Scanner(files[fileNum]);
+                    source = new StringBuilder();
+                    while (s.hasNext()) {
+                        source.append(s.nextLine()).append("\n");
+                    }
+                    s.close();
+
+                    l = new Lexer(source.toString());
+                    result = l.printTokens();
+                    outputToFile(result, args[fileNum]);
                 }
-                Lexer l = new Lexer(source.toString());
-                String result = l.printTokens();
-
-                outputToFile(result);
-
             } catch(FileNotFoundException e) {
                  error(-1, -1, "Exception: " + e.getMessage());
             }
