@@ -8,12 +8,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Represents the lexer portion of the compiler, which takes in a text file / string and returns its tokens
+ */
 public class Lexer {
     private int line;
     private int pos;
     private int position;
     private char chr;
     private String s;
+    private TokenType prevToken;
 
     Map<String, TokenType> keywords = new HashMap<>();
 
@@ -57,7 +61,7 @@ public class Lexer {
         } else {
             System.out.println(msg);
         }
-//        System.exit(1);
+        System.exit(1);
     }
 
     Lexer(String source) {
@@ -73,7 +77,8 @@ public class Lexer {
         this.keywords.put("while", TokenType.Keyword_while);
 
     }
-    Token follow(char expect, TokenType ifyes, TokenType ifno, int line, int pos) {
+
+    /* Token follow(char expect, TokenType ifyes, TokenType ifno, int line, int pos) {
         if (getNextChar() == expect) {
             getNextChar();
             return new Token(ifyes, "", line, pos);
@@ -82,13 +87,18 @@ public class Lexer {
             error(line, pos, String.format("follow: unrecognized character: (%d) '%c'", (int)this.chr, this.chr));
         }
         return new Token(ifno, "", line, pos);
-    }
+    } */
 
+    Token follow(char expect, TokenType ifyes, TokenType ifno, int line, int pos) {
+        if (this.s.charAt(this.position + 1) == expect) {
+            getNextChar();
+            return new Token(ifyes, "", line, pos);
+        } else {
+            return new Token(ifno, "", line, pos);
+        }
+    }
     //So the idea is, you process the char and return its int representation
     //Maybe the Parser is what identifies it as a char, not the Lexer?
-    //Because we're just supposed to return the int ...
-    //I don't know.
-    //TODO: remove letter from value return and tidy up comments
     Token char_lit(int line, int pos) { // handle character literals
         char c = getNextChar(); // skip opening quote - this is the char
         if(c == '\'') {
@@ -104,86 +114,89 @@ public class Lexer {
         //else if c = \
         else if (c == '\\') {
             //if d = n, \n
-            if (d == 'n') ret = new Token(TokenType.Integer, "" + (int)'\n' + " '\\n'", line, pos);
+            if (d == 'n') ret = new Token(TokenType.Integer, "" + (int)'\n', line, pos);
             //if d = \, \\
-            else if (d == '\\') ret = new Token(TokenType.Integer, "" + (int)('\\') + " '\\\\'", line, pos);
+            else if (d == '\\') ret = new Token(TokenType.Integer, "" + (int)('\\'), line, pos);
             else error(line, pos, "invalid escape character");
-            //skip past closing quote
-            //if it wasn't a quote, invalid char literal, error()
+            //skip past closing quote, if it wasn't a quote, invalid char literal
             if (getNextChar() != '\'') error(line, pos, "invalid char literal - no closing quote");
         }
         //if neither in form '?' or '\n' or '\\', invalid char lit
         else error(line, pos, "invalid char literal");
-        System.out.println('\n');
         return ret;
-
 //        return new Token(TokenType.Integer, "" + n, line, pos);
     }
     Token string_lit(char start, int line, int pos) { // handle string literals
-        String result = "";
+        StringBuilder result = new StringBuilder();
         // code here
         start = getNextChar();
         while (start != '"') {
             if (start == '\u0000') {
                 error(this.line, this.pos, "Reached end of file without closing String");
-                return new Token(TokenType.End_of_input, result, line, pos);
+                return new Token(TokenType.End_of_input, result.toString(), line, pos);
             }
-            result += start;
+            result.append(start);
             start = getNextChar();
         }
-        return new Token(TokenType.String, result, line, pos);
+        return new Token(TokenType.String, result.toString(), line, pos);
     }
     Token div_or_comment(int line, int pos) { // handle division or comments
         // code here
-        // / is division, // or /* */ is comments
-        //if / by itself aka the next symbol is not * or /, DIVISION OPERATOR
         //if // aka the next symbol is also /, COMMENT - skip to the next line
-        char nextSymbol = getNextChar();
+        char nextSymbol = this.s.charAt(this.position + 1);
         if (nextSymbol == '/') {
-            nextSymbol = getNextChar();
+            getNextChar(); //skip it
             while (this.line == line) {
+                //if the next char is end of file, return end of input token, otherwise continue
                 if (getNextChar() == '\u0000') return new Token(TokenType.End_of_input, "", this.line, this.pos);
             }
-            //AND the next char is not end of file
             return getToken();
-            //if /* aka the next symbol is *, while the next symbol is not *, go to the next character. If the next char is not /, go past and keep going
+            //if /* aka the next symbol is * COMMENT
         } else if (nextSymbol == '*') {
+            getNextChar(); // skip it
+            //while the next symbol is not *, go to the next character. If the next char is not /, go past and keep going
             boolean done = false;
             while (! done) {
                 nextSymbol = getNextChar();
-                if (nextSymbol == '*' && getNextChar() == '/') {
-                    return getToken();
-                };
+                if (nextSymbol == '*' && this.s.charAt(this.position + 1) == '/') {
+                    getNextChar();
+                    done = true;
+                }
             }
-//
-//            pos++;
-//            //find the next */
-//            while (! done) {
-//                nextSymbol = this.s.charAt(pos + 1);
-//                char followingSymbol = this.s.charAt(pos + 2);
-//                pos += 2;
-//                if (nextSymbol == '*' && followingSymbol == '/') {
-//                    this.pos = pos;
-//                    this.position = pos;
-//                    return getToken();
-//                }
-//            }
+            return getToken();
         }
+        //if not comment, must be division operator
         return new Token(TokenType.Op_divide, null, line, pos);
-
-
-//        return getToken();
     }
     Token identifier_or_integer(int line, int pos) { // handle identifiers and integers
-        boolean is_number = true;
-        StringBuilder text = new StringBuilder(this.s.charAt(pos));
+        StringBuilder text = new StringBuilder();
+        text.append(chr);
+        int posi = this.position + 1;
         // code here
-        while (Character.isLetterOrDigit(this.s.charAt(pos + 1))) {
+        //append the first letter
+        //while in valid index range
+        //get the following letter
+        //while the following letter is a letter or a number, append it
+        //if not, return and exit, including if EOF
+        while (posi < this.s.length() && Character.isLetterOrDigit(this.s.charAt(posi))) {
             text.append(getNextChar());
-            pos++;
+            posi++;
         }
-        return new Token(TokenType.Identifier, text.toString(), line, pos);
+        String value = text.toString();
+
+        //if it's a keyword...
+        TokenType lookup = keywords.get(value);
+        if (lookup != null) {
+            return new Token(lookup, "", line, pos);
+        }
+        //if it's an int...
+        if(value.matches("^-?\\d+$")) {
+            return new Token(TokenType.Integer, value, line, pos);
+        }
+        //if not, it must be an identifier
+        return new Token(TokenType.Identifier, "\t" + value, line, pos);
     }
+
     Token getToken() {
         int line, pos;
         getNextChar();
@@ -194,16 +207,49 @@ public class Lexer {
         pos = this.pos;
 
         // switch statement on character for all forms of tokens with return to follow.... one example left for you
-
-        switch (this.chr) {
-            case '\u0000': return new Token(TokenType.End_of_input, "", this.line, this.pos);
-            case '\'': return char_lit(line, pos);
-            case '"': return string_lit('"', this.line, this.pos);
-            case '/': return div_or_comment(line, pos);
+        Token result = switch (this.chr) {
+            case '\u0000':
+                yield new Token(TokenType.End_of_input, "", this.line, this.pos);
             // remaining case statements
-
-            default: return identifier_or_integer(line, pos);
-        }
+            case '\'': yield char_lit(line, pos);
+            case '"': yield string_lit('"', this.line, this.pos);
+            case '/': yield div_or_comment(line, pos);
+            case '(': yield new Token(TokenType.LeftParen, "", line, pos);
+            case ')': yield new Token(TokenType.RightParen, "", line, pos);
+            case '{': yield new Token(TokenType.LeftBrace, "", line, pos);
+            case '}': yield new Token(TokenType.RightBrace, "", line, pos);
+            case ';': yield new Token(TokenType.Semicolon, "", line, pos);
+            case ',': yield new Token(TokenType.Comma, "", line, pos);
+            case '*': yield new Token(TokenType.Op_multiply, "", line, pos);
+            case '%': yield new Token(TokenType.Op_mod, "", line, pos);
+            case '+': yield new Token(TokenType.Op_add, "", line, pos);
+            //TODO: MINUS VS NEGATE
+            case '-':
+                //if the previous token was an identifier or integer, then binary
+                if (prevToken == TokenType.Identifier || prevToken == TokenType.Integer) {
+                    yield new Token(TokenType.Op_subtract, "", line, pos);
+                } else {
+                    //else, unary
+                    yield new Token(TokenType.Op_negate, "", line, pos);
+                }
+            case '<': // < vs <=
+                yield follow('=', TokenType.Op_lessequal, TokenType.Op_less, line, pos);
+            case '>': // > vs >=
+                yield follow('=', TokenType.Op_greaterequal, TokenType.Op_greater, line, pos);
+            case '=': // = vs ==
+                yield follow('=', TokenType.Op_equal, TokenType.Op_assign, line, pos);
+            case '!':
+                yield follow('=', TokenType.Op_notequal, TokenType.Op_not, line, pos);
+            case '&':
+                getNextChar(); //skip second &
+                yield new Token(TokenType.Op_and, "", line, pos);
+            case '|':
+                getNextChar(); //skip second |
+                yield new Token(TokenType.Op_or, "", line, pos);
+            default: yield identifier_or_integer(line, pos);
+        };
+        prevToken = result.tokentype;
+        return result;
     }
 
     char getNextChar() {
@@ -248,16 +294,16 @@ public class Lexer {
     public static void main(String[] args) {
         if (1==1) {
             try {
-
-                File f = new File("src/main/resources/testing1.c");
+                //checked: count, fizzbuzz, hello, loop, prime
+                //to check: 99bottles (need minus), 2 test files one with char
+                File f = new File("src/main/resources/testing2.c");
                 Scanner s = new Scanner(f);
-                String source = " ";
-                String result = " ";
+                StringBuilder source = new StringBuilder();
                 while (s.hasNext()) {
-                    source += s.nextLine() + "\n";
+                    source.append(s.nextLine()).append("\n");
                 }
-                Lexer l = new Lexer(source);
-                result = l.printTokens();
+                Lexer l = new Lexer(source.toString());
+                String result = l.printTokens();
 
                 outputToFile(result);
 
