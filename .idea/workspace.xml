@@ -6,7 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="a7ac25b6-265d-43ed-8230-0c6749f7127e" name="Changes" comment="New commit with added getNextToken() code">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/prime.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/prime.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Parser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Parser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ParserTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ParserTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/count.par" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/count.par" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,6 +47,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="partial-parser" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -61,6 +69,7 @@
     "WebServerToolWindowFactoryState": "false",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "/Users/elloyd/Desktop/NSC/Courses/Spring Courses/Programming Languages/Projects/MiniCompilerProject/src/main/resources",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -84,7 +93,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Lexer">
+  <component name="RunManager" selected="Application.Parser">
     <configuration name="Lexer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="Lexer" />
       <module name="MiniCompiler.main" />
@@ -131,7 +140,14 @@
       <option name="project" value="LOCAL" />
       <updated>1682631009218</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="New commit with added getNextToken() code">
+      <created>1716252356828</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1716252356828</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

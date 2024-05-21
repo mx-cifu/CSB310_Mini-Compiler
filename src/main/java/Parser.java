@@ -400,42 +400,36 @@ class Parser {
                 getNextToken();
                 expect("LeftParen", TokenType.LeftParen);
 
+                 s = null;
 
-                s = null;
-                // this handling of String only works for Hello, as String literals should be handled within Keyword_print
-                // only
-                if(this.token.tokentype == TokenType.String) {
+
+                if (this.token.tokentype == TokenType.String) {
                     s = Node.make_node(NodeType.nd_Prts, Node.make_leaf(NodeType.nd_String, this.token.value));
                     getNextToken();
                 }
 
-                Node nextPrintNode = null;
-                NodeType nodeType = null;
-
-                // in a properly functioning case, this would "trap" the print() statement assuming it had more than
-                // one entry separated by commas
-                while (this.token.tokentype != TokenType.RightParen && this.token.tokentype == TokenType.Comma) {
-
-                    // if it is a string, handle it similar to outside the loop
-                    if (this.token.tokentype == TokenType.String) {
-                        s =  Node.make_leaf(NodeType.nd_String, this.token.value);
-
-                    // if it was not a string, and you're printing an integer or identifier, call expr() to  handle it
-                    } else {
-
-                    }
-                    // connect it back as a sequence node
-                    nextPrintNode = Node.make_node(this.token.tokentype.node_type, s, nextPrintNode);
+                while (this.token.tokentype == TokenType.Comma) {
                     getNextToken();
+                    Node printNode = null;
+
+                    if (this.token.tokentype == TokenType.String) {
+                        printNode = Node.make_node(NodeType.nd_Prts, Node.make_leaf(NodeType.nd_String, this.token.value));
+                        getNextToken();
+                    } else if (this.token.tokentype == TokenType.Identifier || this.token.tokentype == TokenType.Integer) {
+                        s2 = expr(0);
+                        printNode = Node.make_node(NodeType.nd_Prti, s2);
+                    }
+                    s = Node.make_node(NodeType.nd_Sequence, s, printNode);
+
                 }
 
-                // end of print should be expecting a right parenthesis and semicolon
                 expect("RightParen", TokenType.RightParen);
                 expect("Semicolon", TokenType.Semicolon);
 
-                // connect everything that was in the print statement back to t
+                // Create the print node
                 t = Node.make_node(NodeType.nd_Sequence, null, s);
                 break;
+
 
 
             case Keyword_putc:
@@ -475,16 +469,13 @@ class Parser {
                 s = stmt();
                 while (this.token.tokentype != TokenType.RightBrace) {
                     s2 = stmt();
+
                     s = Node.make_node(NodeType.nd_Sequence, s, s2);
+
                 }
                 expect("RightBrace", TokenType.RightBrace);
                 t = Node.make_node(NodeType.nd_Sequence, null, s);
                 break;
-
-//            case String:
-//                t = Node.make_leaf(NodeType.nd_String, this.token.value);
-//                getNextToken();
-//                break;
 
 
         }
@@ -541,7 +532,7 @@ class Parser {
      */
     static void outputToFile(String result) {
         try {
-            FileWriter myWriter = new FileWriter("src/main/resources/hello.par");
+            FileWriter myWriter = new FileWriter("src/main/resources/count.par");
             myWriter.write(result);
             myWriter.close();
             System.out.println("Successfully wrote to the file.");
@@ -601,7 +592,7 @@ class Parser {
 
                 // finish creating your Hashmap. I left one as a model
 
-                Scanner s = new Scanner(new File("src/main/resources/hello.lex"));
+                Scanner s = new Scanner(new File("src/main/resources/count.lex"));
                 String source = " ";
                 while (s.hasNext()) {
                     String str = s.nextLine();
