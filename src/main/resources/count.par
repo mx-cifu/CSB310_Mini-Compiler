@@ -9,21 +9,11 @@ Less
 Identifier count 
 Integer 10 
 Sequence
-Sequence
 ;
 Sequence
 Sequence
-Sequence
 ;
-Prts
-String "count is: " 
-;
-Prti
-Identifier count 
-;
-Prts
-String "\n" 
-;
+String 
 Assign
 Identifier count 
 Add
